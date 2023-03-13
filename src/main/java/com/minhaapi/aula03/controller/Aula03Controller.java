@@ -1,18 +1,18 @@
 package com.minhaapi.aula03.controller;
 
+import ch.qos.logback.core.net.server.Client;
 import com.minhaapi.aula03.ClienteDTO;
 import com.minhaapi.aula03.dao.ClienteDAO;
 import com.minhaapi.aula03.repository.ClienteRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 public class Aula03Controller {
@@ -23,29 +23,42 @@ public class Aula03Controller {
     public HashMap<Integer, ClienteDTO> clientes = new HashMap<Integer, ClienteDTO>();
 
     @PostMapping("/cliente")
-    public ResponseEntity<ClienteDTO> adicionarCliente (@RequestBody ClienteDTO c){
+    public ResponseEntity<ClienteDTO> adicionarCliente (@RequestBody @Valid ClienteDTO c){
          ClienteDAO clientePersistido = clienteRepository.save(c.toDao());
-        return new ResponseEntity<ClienteDTO>(clientePersistido.toDTO(), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<ClienteDTO>(clientePersistido.toDTO(), HttpStatus.CREATED);
     }
 
     @GetMapping("/cliente")
-    public Collection<ClienteDTO> verTodosClientes(){
-        return clientes.values();
+    public ResponseEntity<List<ClienteDTO>> verTodosClientes(){
+        return ResponseEntity.ok().body(clienteRepository.findAll()
+                    .stream()
+                    .map(clienteDAO -> clienteDAO.toDTO())
+                    .collect(Collectors.toList()));
     }
 
     @GetMapping("/cliente/{id}")
-    public ClienteDTO getClientePorId(@PathVariable("id") int id){
-        return clientes.get(id);
+    public ResponseEntity<ClienteDTO> getClientePorId(@PathVariable("id") Long id){
+       Optional<ClienteDAO> cliente = clienteRepository.findById(id);
+       if (cliente.isPresent()){
+           return new ResponseEntity<ClienteDTO>(cliente.get().toDTO(), HttpStatus.OK);
+       } else {
+           return ResponseEntity.notFound().build();
+       }
     }
 
     @DeleteMapping("/cliente/{id}")
-    public ClienteDTO deletarClientePorId(@PathVariable("id") int id){
-        return clientes.remove(id);
+    public ResponseEntity<ClienteDTO> deletarClientePorId(@PathVariable("id") Long id){
+        ClienteDAO cliente = new ClienteDAO();
+        cliente.setId(id);
+        clienteRepository.delete(cliente);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/cliente/{id}")
-    public ClienteDTO atualizaCliente(@PathVariable("id") int id, @RequestBody ClienteDTO c){
-        return clientes.put(id,c);
+    public ResponseEntity<ClienteDTO> atualizaCliente(@PathVariable("id") Long id, @RequestBody ClienteDTO c){
+        c.setId(id);
+        ClienteDAO clienteAtualizado = clienteRepository.save(c.toDao());
+        return new ResponseEntity<ClienteDTO>(clienteAtualizado.toDTO(), HttpStatus.OK);
     }
 
 }

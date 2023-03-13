@@ -2,16 +2,14 @@ package com.minhaapi.aula03.dao;
 
 import com.minhaapi.aula03.ClienteDTO;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity(name = "cliente")
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Setter
 public class ClienteDAO {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -22,15 +20,12 @@ public class ClienteDAO {
     private String sobrenome;
 
     private int idade;
-   // @OneToOne
-    // @JoinColumn(name = "id_endereco")
- //   private EnderecoDAO endereco;
 
     public ClienteDTO toDTO (){
         return ClienteDTO.builder()
                 .nome(nome)
                 .sobrenome(sobrenome)
-                .idade(idade)
+                .idade(String.valueOf(idade))
                 .id(id)
                 .build();
     }
